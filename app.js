@@ -22,9 +22,23 @@ var examRoutes = require('./routes/examRoutes');
 
 var app = express();
 
-// ✅ Enable CORS for frontend (React at http://localhost:3000)
+/* 
+✅ CORS configuration with multiple origins from .env
+In your .env file, set:
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+*/
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [];
+
 app.use(cors({
-  origin: "http://localhost:3000", // Your React app URL
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Content-Type,Authorization"
 }));
