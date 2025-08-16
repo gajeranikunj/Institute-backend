@@ -47,6 +47,9 @@ app.use(cors({
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(express.json({ limit: "50mb" })); // For JSON payloads
+app.use(express.urlencoded({ limit: "50mb", extended: true })); // For form data
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
