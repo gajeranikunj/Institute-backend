@@ -23,23 +23,46 @@ const registerAdmin = async (req, res) => {
     token: generateToken(admin._id)
   });
 };
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-const loginAdmin = async (req, res) => {
-  const { email, password } = req.body;
+    // First check Admin
+    const admin = await Admin.findOne({ email });
+    if (admin) {
+      const isMatch = await bcrypt.compare(password, admin.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      return res.status(200).json({
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        token: generateToken(admin._id),
+        role: "admin"
+      });
+    }
 
-  const admin = await Admin.findOne({ email });
-  if (!admin) return res.status(400).json({ message: 'Invalid credentials' });
+    // If not admin, check Faculty
+    const faculty = await Faculty.findOne({ email });
+    if (faculty && await faculty.matchPassword(password)) {
+      return res.status(200).json({
+        _id: faculty._id,
+        name: faculty.name,
+        email: faculty.email,
+        token: generateToken(faculty._id),
+        role: "faculty"
+      });
+    }
 
-  const isMatch = await bcrypt.compare(password, admin.password);
-  if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    // If neither Admin nor Faculty matched
+    return res.status(401).json({ message: "Invalid email or password" });
 
-  res.json({
-    _id: admin._id,
-    name: admin.name,
-    email: admin.email,
-    token: generateToken(admin._id)
-  });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 };
+
 
 const getAdminProfile = async (req, res) => {
   res.json(req.admin);
@@ -114,7 +137,7 @@ const getAdminDashboardSummary = async (req, res) => {
 
 module.exports = {
   registerAdmin,
-  loginAdmin,
+  loginUser,
   getAdminProfile,
   updateAdmin,
   deleteAdmin,

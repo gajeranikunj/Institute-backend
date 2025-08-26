@@ -1,7 +1,7 @@
 const express = require('express');
 const {
   registerAdmin,
-  loginAdmin,
+  loginUser,
   getAdminProfile,
   updateAdmin,
   deleteAdmin,
@@ -14,7 +14,7 @@ const {protect, adminOnly} = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/register', registerAdmin);
-router.post('/login', loginAdmin);
+router.post('/login', loginUser);
 router.get('/profile', protect, getAdminProfile);
 router.put('/profile', protect, updateAdmin);
 router.delete('/profile', protect, deleteAdmin);

@@ -1,13 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+
 const {
-  markAttendance,
-  updateTodayAttendance,
-  getStudentHistory
+  createAttendance,
+  updateAttendance,
+  deleteAttendance,
+  getAttendanceByStudentId,
+  getAllAttendanceWithStudents
 } = require('../controllers/attendanceController');
 
-router.post('/mark', protect, markAttendance);
-router.put('/update', protect, updateTodayAttendance);
-router.get('/student/:studentId', protect, getStudentHistory);
+// Create new attendance
+router.post('/mark', protect, createAttendance);
+
+// Update attendance by ID
+router.put('/update/:id', protect, updateAttendance);
+
+// Delete attendance by ID
+router.delete('/delete/:id', protect, deleteAttendance);
+
+// Get attendance by student ID
+router.get('/student/:studentId', protect, getAttendanceByStudentId);
+
+// Get all attendance grouped by student
+router.get('/all', protect, getAllAttendanceWithStudents);
+
 module.exports = router;

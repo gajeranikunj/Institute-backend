@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
+const Attendance = require('../models/Attendance');
 const generateReceipt = require('../utils/generateReceipt');
 const path = require('path');
 
@@ -17,7 +18,7 @@ const createStudent = async (req, res) => {
       name, email, phone, address, dob, course,
       faculty, inquiryId, feesPaid, status, slotTime
     });
-    
+
 
     res.status(201).json(newStudent);
   } catch (error) {
@@ -28,9 +29,29 @@ const createStudent = async (req, res) => {
 // Get all students
 const getAllStudents = async (req, res) => {
   try {
+    // Fetch all students
     const students = await Student.find().populate('faculty', 'name email');
-    res.status(200).json(students);
+
+    // Fetch all attendance
+    const allAttendance = await Attendance.find()
+      .populate('faculty', 'name')
+      .populate('student', 'name');
+
+    // Map attendance to each student
+    const studentsWithAttendance = students.map(student => {
+      const studentAttendance = allAttendance.filter(
+        att => att?.student?._id?.toString() === student?._id?.toString()
+      );
+      return {
+        ...student.toObject(),
+        attendance: studentAttendance
+      };
+    });
+
+    res.status(200).json(studentsWithAttendance);
   } catch (error) {
+    console.log(error);
+    
     res.status(500).json({ message: 'Failed to fetch students', error: error.message });
   }
 };
@@ -38,13 +59,24 @@ const getAllStudents = async (req, res) => {
 // Get student by ID
 const getStudentById = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).populate('faculty', 'name');
+    // Fetch student by ID
+    const student = await Student.findById(req.params.id).populate('faculty', 'name email');
     if (!student) return res.status(404).json({ message: 'Student not found' });
-    res.status(200).json(student);
+
+    // Fetch attendance for this student
+    const attendanceRecords = await Attendance.find({ student: student._id })
+      .populate('faculty', 'name')
+      .populate('student', 'name');
+
+    res.status(200).json({
+      ...student.toObject(),
+      attendance: attendanceRecords
+    });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch student', error: error.message });
   }
 };
+
 
 // Update student
 const updateStudent = async (req, res) => {
@@ -53,6 +85,8 @@ const updateStudent = async (req, res) => {
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
     const { name, email, phone, address, dob, course, feesPaid, status, slotTime } = req.body;
+    console.log(req.body);
+    
 
 
     if (name) student.name = name;
@@ -68,6 +102,8 @@ const updateStudent = async (req, res) => {
     const updated = await student.save();
     res.status(200).json(updated);
   } catch (error) {
+    console.log(error.message);
+    
     res.status(500).json({ message: 'Failed to update student', error: error.message });
   }
 };
@@ -96,42 +132,42 @@ const getStudentsByFaculty = async (req, res) => {
 };
 
 const addFeeInstallment = async (req, res) => {
-    try {
-      const { studentId } = req.params;
-      const { amount, date, remark } = req.body;
-  
-      const student = await Student.findById(studentId);
-      if (!student) return res.status(404).json({ message: 'Student not found' });
-  
-      // Push to feesHistory
-      student.feesHistory.push({
-        amount,
-        date: date || new Date(),
-        remark
-      });
-  
-      // Update paid & pending
-      student.paidFees += amount;
-      student.pendingFees = student.totalFees - student.paidFees;
-  
-      await student.save();
-      const receiptPath = path.join(__dirname, '../receipts', `${student._id}_${Date.now()}.pdf`);
-      await generateReceipt(student, { amount, date, remark }, receiptPath);
-    
-      return res.status(200).json({
-        message: 'Installment added successfully',
-        feesHistory: student.feesHistory,
-        paidFees: student.paidFees,
-        pendingFees: student.pendingFees,
-        receiptUrl: `/receipts/${path.basename(receiptPath)}`
+  try {
+    const { studentId } = req.params;
+    const { amount, date, remark } = req.body;
 
-      });
-    } catch (error) {
-      console.error('Error adding installment:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
-  
+    const student = await Student.findById(studentId);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    // Push to feesHistory
+    student.feesHistory.push({
+      amount,
+      date: date || new Date(),
+      remark
+    });
+
+    // Update paid & pending
+    student.paidFees += amount;
+    student.pendingFees = student.totalFees - student.paidFees;
+
+    await student.save();
+    const receiptPath = path.join(__dirname, '../receipts', `${student._id}_${Date.now()}.pdf`);
+    await generateReceipt(student, { amount, date, remark }, receiptPath);
+
+    return res.status(200).json({
+      message: 'Installment added successfully',
+      feesHistory: student.feesHistory,
+      paidFees: student.paidFees,
+      pendingFees: student.pendingFees,
+      receiptUrl: `/receipts/${path.basename(receiptPath)}`
+
+    });
+  } catch (error) {
+    console.error('Error adding installment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 module.exports = {
   createStudent,

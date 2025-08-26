@@ -1,154 +1,132 @@
 const Attendance = require('../models/Attendance');
 const Student = require('../models/Student');
+const Faculty = require('../models/Faculty');
+// ✅ Create or Update Attendance Record
+const createAttendance = async (req, res) => {
+  try {
+    const { faculty, student, status, date } = req.body;
 
-const markAttendance = async (req, res) => {
-    try {
-        const { records } = req.body; // array of { studentId, status }
-        const facultyId = req.user._id;
+    const attendanceDate = date ? new Date(date).setHours(0, 0, 0, 0) : new Date().setHours(0, 0, 0, 0);
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    // ✅ Check if attendance already exists for this student & date
+    let attendance = await Attendance.findOne({
+      student,
+      date: { $gte: attendanceDate, $lt: attendanceDate + 24 * 60 * 60 * 1000 }, // same day
+    });
 
-        let attendance = await Attendance.findOne({
-            faculty: facultyId,
-            date: { $gte: today }
-        });
-
-        const formattedRecords = records.map((r) => ({
-            student: r.studentId,
-            status: r.status
-        }));
-
-        if (attendance) {
-            // Attendance already exists — update it with new records
-
-            // Make a map of existing student IDs
-            const existingStudentIds = new Set(
-                attendance.records.map((r) => r.student.toString())
-            );
-
-            for (const record of formattedRecords) {
-                const studentIdStr = record.student.toString();
-
-                // If this student not yet marked, update attendance
-                if (!existingStudentIds.has(studentIdStr)) {
-                    attendance.records.push(record);
-
-                    // If Absent, increment counter
-                    if (record.status === 'Absent') {
-                        await Student.findByIdAndUpdate(record.student, { $inc: { absentCount: 1 } });
-                    }
-                }
-            }
-
-            await attendance.save();
-
-            return res.status(200).json({
-                message: 'Attendance updated with remaining students.',
-                data: attendance
-            });
-        }
-
-        // First time creating attendance
-        for (const record of formattedRecords) {
-            if (record.status === 'Absent') {
-                await Student.findByIdAndUpdate(record.student, { $inc: { absentCount: 1 } });
-            }
-        }
-
-        const newAttendance = await Attendance.create({
-            faculty: facultyId,
-            records: formattedRecords
-        });
-
-        res.status(201).json({ message: 'Attendance marked successfully.', data: newAttendance });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error', error: err.message });
-    }
-};
-
-
-
-const updateTodayAttendance = async (req, res) => {
-    try {
-      const { records } = req.body; // array of { studentId, status }
-      const facultyId = req.user._id;
-  
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-  
-      const attendance = await Attendance.findOne({
-        faculty: facultyId,
-        date: { $gte: todayStart }
-      });
-  
-      if (!attendance) {
-        return res.status(404).json({ message: 'No attendance found for today.' });
-      }
-  
-      const recordMap = new Map();
-      records.forEach(r => recordMap.set(r.studentId, r.status));
-  
-      // Update records
-      attendance.records = attendance.records.map(r => {
-        const updatedStatus = recordMap.get(r.student.toString());
-  
-        if (updatedStatus) {
-          // Adjust absentCount if changing status
-          if (r.status !== updatedStatus) {
-            if (r.status === 'Absent' && updatedStatus === 'Present') {
-              Student.findByIdAndUpdate(r.student, { $inc: { absentCount: -1 } }).exec();
-            } else if (r.status === 'Present' && updatedStatus === 'Absent') {
-              Student.findByIdAndUpdate(r.student, { $inc: { absentCount: 1 } }).exec();
-            }
-            return { ...r.toObject(), status: updatedStatus };
-          }
-        }
-  
-        return r;
-      });
-  
+    if (attendance) {
+      // ✅ Update existing attendance
+      attendance.status = status || "Absent";
       await attendance.save();
-  
-      return res.status(200).json({ message: 'Attendance updated successfully.', data: attendance });
-  
-    } catch (err) {
-      return res.status(500).json({ message: 'Server error', error: err.message });
+      return res.status(200).json({ message: "Attendance updated", attendance });
     }
-  };
-  
 
-const getStudentHistory = async (req, res) => {
-    try {
-        const { studentId } = req.params;
+    // ✅ Create new attendance if none exists
+    attendance = new Attendance({
+      faculty,
+      student,
+      status: status || "Absent",
+      date: attendanceDate,
+    });
 
-        // Start of current month
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const attendanceRecords = await Attendance.find({
-            date: { $gte: startOfMonth },
-            'records.student': studentId
-        }).sort({ date: -1 });
-
-        const history = attendanceRecords.map((entry) => {
-            const record = entry.records.find(r => r.student.toString() === studentId);
-            return {
-                date: entry.date.toISOString().split("T")[0],
-                status: record.status
-            };
-        });
-
-        res.status(200).json({ studentId, count: history.length, history });
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching student history', error: err.message });
-    }
+    await attendance.save();
+    res.status(201).json({ message: "Attendance recorded", attendance });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
+// Update attendance record by ID
+const updateAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
+    const attendance = await Attendance.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!attendance) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    res.status(200).json({ message: 'Attendance updated', attendance });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete attendance record by ID
+const deleteAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attendance = await Attendance.findByIdAndDelete(id);
+
+    if (!attendance) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    res.status(200).json({ message: 'Attendance deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get attendance by student ID
+const getAttendanceByStudentId = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId).select('_id name');
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const attendanceRecords = await Attendance.find({ student: studentId })
+      .populate('faculty', 'name')
+      .populate('student', 'name');
+
+    res.status(200).json({
+      student,
+      attendance: attendanceRecords
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get all attendance grouped by student
+const getAllAttendanceWithStudents = async (req, res) => {
+  try {
+    const students = await Student.find().select('_id name');
+    const allAttendance = await Attendance.find()
+      .populate('faculty', 'name')
+      .populate('student', 'name');
+
+    const result = students.map(student => {
+      const studentAttendance = allAttendance.filter(
+        att => att.student._id.toString() === student._id.toString()
+      );
+
+      return {
+        student,
+        attendance: studentAttendance
+      };
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
-    markAttendance,
-    updateTodayAttendance,
-    getStudentHistory
-}
+  createAttendance,
+  updateAttendance,
+  deleteAttendance,
+  getAttendanceByStudentId,
+  getAllAttendanceWithStudents
+};
