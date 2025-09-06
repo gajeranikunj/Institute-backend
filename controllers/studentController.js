@@ -4,22 +4,67 @@ const Attendance = require('../models/Attendance');
 const generateReceipt = require('../utils/generateReceipt');
 const path = require('path');
 
-// Create Student manually (if needed outside inquiry)
+// ✅ Create Student
 const createStudent = async (req, res) => {
   try {
-    const { name, email, phone, address, dob, course, faculty, inquiryId, feesPaid, status, slotTime,branch } = req.body;
+    const {
+      name,
+      surname,
+      fathername,
+      fatherphone,
+      email,
+      phone,
+      address,
+      dob,
+      aadharno,
+      photo,
+      Signature,
+      grNumber,
+      course,
+      faculty,
+      inquiryId,
+      admissionDate,
+      joindate,
+      rafrence,
+      totalFees,
+      paidFees,
+      pendingFees,
+      status,
+      slotTime,
+      branch
+    } = req.body;
 
-
-
+    // Check for duplicate inquiry
     const existing = await Student.findOne({ inquiryId });
-    if (existing) return res.status(400).json({ message: 'Student already exists for this inquiry' });
+    if (existing)
+      return res.status(400).json({ message: 'Student already exists for this inquiry' });
 
     const newStudent = await Student.create({
-      name, email, phone, address, dob, course,
-      faculty, inquiryId, feesPaid, status, slotTime
-      ,branch
+      name,
+      surname,
+      fathername,
+      fatherphone,
+      email,
+      phone,
+      address,
+      dob,
+      aadharno,
+      photo,
+      Signature,
+      grNumber,
+      course,
+      faculty,
+      inquiryId,
+      admissionDate,
+      joindate,
+      rafrence,
+      totalFees,
+      paidFees,
+      pendingFees,
+      status,
+      slotTime,
+      branch
     });
-
 
     res.status(201).json(newStudent);
   } catch (error) {
@@ -27,18 +72,14 @@ const createStudent = async (req, res) => {
   }
 };
 
-// Get all students
+// ✅ Get all students + attendance
 const getAllStudents = async (req, res) => {
   try {
-    // Fetch all students
     const students = await Student.find().populate('faculty', 'name email');
-
-    // Fetch all attendance
     const allAttendance = await Attendance.find()
       .populate('faculty', 'name')
       .populate('student', 'name');
 
-    // Map attendance to each student
     const studentsWithAttendance = students.map(student => {
       const studentAttendance = allAttendance.filter(
         att => att?.student?._id?.toString() === student?._id?.toString()
@@ -51,20 +92,16 @@ const getAllStudents = async (req, res) => {
 
     res.status(200).json(studentsWithAttendance);
   } catch (error) {
-    console.log(error);
-    
     res.status(500).json({ message: 'Failed to fetch students', error: error.message });
   }
 };
 
-// Get student by ID
+// ✅ Get student by ID
 const getStudentById = async (req, res) => {
   try {
-    // Fetch student by ID
     const student = await Student.findById(req.params.id).populate('faculty', 'name email');
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
-    // Fetch attendance for this student
     const attendanceRecords = await Attendance.find({ student: student._id })
       .populate('faculty', 'name')
       .populate('student', 'name');
@@ -78,39 +115,53 @@ const getStudentById = async (req, res) => {
   }
 };
 
-
-// Update student
+// ✅ Update Student (all fields)
 const updateStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
-    const { name, email, phone, address, dob, course, feesPaid, status, slotTime,branch } = req.body;
-    console.log(req.body);
-    
+    const fields = [
+      'name',
+      'surname',
+      'fathername',
+      'fatherphone',
+      'email',
+      'phone',
+      'address',
+      'dob',
+      'aadharno',
+      'photo',
+      'Signature',
+      'grNumber',
+      'course',
+      'faculty',
+      'inquiryId',
+      'admissionDate',
+      'joindate',
+      'rafrence',
+      'totalFees',
+      'paidFees',
+      'pendingFees',
+      'status',
+      'slotTime',
+      'branch'
+    ];
 
-
-    if (name) student.name = name;
-    if (email) student.email = email;
-    if (phone) student.phone = phone;
-    if (address) student.address = address;
-    if (dob) student.dob = dob;
-    if (course) student.course = course;
-    if (feesPaid !== undefined) student.feesPaid = feesPaid;
-    if (status) student.status = status;
-    if (slotTime) student.slotTime = slotTime;
-    if (branch) student.branch = branch;
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        student[field] = req.body[field];
+      }
+    });
 
     const updated = await student.save();
     res.status(200).json(updated);
   } catch (error) {
-    console.log(error.message);
-    
     res.status(500).json({ message: 'Failed to update student', error: error.message });
   }
 };
 
-// Delete student
+// ✅ Delete Student
 const deleteStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
@@ -123,16 +174,20 @@ const deleteStudent = async (req, res) => {
   }
 };
 
-// Get students by faculty
+// ✅ Get students by faculty
 const getStudentsByFaculty = async (req, res) => {
   try {
-    const students = await Student.find({ faculty: req.params.facultyId }).populate('faculty', 'name');
+    const students = await Student.find({ faculty: req.params.facultyId }).populate(
+      'faculty',
+      'name'
+    );
     res.status(200).json(students);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch students by faculty', error: error.message });
   }
 };
 
+// ✅ Add Fee Installment
 const addFeeInstallment = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -141,18 +196,17 @@ const addFeeInstallment = async (req, res) => {
     const student = await Student.findById(studentId);
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
-    // Push to feesHistory
     student.feesHistory.push({
       amount,
       date: date || new Date(),
       remark
     });
 
-    // Update paid & pending
     student.paidFees += amount;
     student.pendingFees = student.totalFees - student.paidFees;
 
     await student.save();
+
     const receiptPath = path.join(__dirname, '../receipts', `${student._id}_${Date.now()}.pdf`);
     await generateReceipt(student, { amount, date, remark }, receiptPath);
 
@@ -162,14 +216,11 @@ const addFeeInstallment = async (req, res) => {
       paidFees: student.paidFees,
       pendingFees: student.pendingFees,
       receiptUrl: `/receipts/${path.basename(receiptPath)}`
-
     });
   } catch (error) {
-    console.error('Error adding installment:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 module.exports = {
   createStudent,

@@ -91,9 +91,22 @@ const updateInquiryStatus = async (req, res) => {
 // Confirm inquiry and create student
 const confirmInquiry = async (req, res) => {
   try {
-    const { facultyId, grNumber, photo, totalFees, paidFees, slotTime ,branch} = req.body;
-    console.log(req.body);
-    
+    const {
+      facultyId,
+      grNumber,
+      photo,
+      totalFees,
+      paidFees,
+      slotTime,
+      branch,
+      Signature,
+      surname,
+      fathername,
+      fatherphone,
+      aadharno,
+      joindate,
+      rafrence
+    } = req.body;
 
     // ----- Fetch Inquiry -----
     const inquiry = await Inquiry.findById(req.params.id);
@@ -112,7 +125,6 @@ const confirmInquiry = async (req, res) => {
     inquiry.assignedFaculty = facultyId;
     inquiry.status = 'Confirmed';
     await inquiry.save();
-
 
     // ----- Validate fees -----
     const total = Number(totalFees);
@@ -139,12 +151,21 @@ const confirmInquiry = async (req, res) => {
 
     // ----- Create new student -----
     const newStudent = await Student.create({
+      // From Inquiry
       name: inquiry.name,
       email: inquiry.email,
       phone: inquiry.phone,
       address: inquiry.address,
       dob: inquiry.dob,
       course: inquiry.courseInterested,
+
+      // From request
+      surname,
+      fathername,
+      fatherphone,
+      aadharno,
+      joindate,
+      rafrence,
       faculty: facultyId,
       inquiryId: inquiry._id,
       photo,
@@ -154,7 +175,8 @@ const confirmInquiry = async (req, res) => {
       pendingFees,
       feesHistory: [firstPayment],
       slotTime,
-      branch
+      branch,
+      Signature
     });
 
     // ----- Generate receipt PDF -----
@@ -183,6 +205,7 @@ const confirmInquiry = async (req, res) => {
     res.status(500).json({ message: 'Failed to confirm inquiry', error: error.message });
   }
 };
+
 
 
 

@@ -21,6 +21,7 @@ var attendanceRoutes = require('./routes/attendanceRoutes');
 var examRoutes = require('./routes/examRoutes');
 var courseRoutes = require('./routes/courseRoutes');
 var branchRoutes = require('./routes/branchRoutes');
+var BatchTime = require('./routes/BatchTimeRoutes');
 var app = express();
 
 /* 
@@ -68,6 +69,7 @@ app.use('/attendance', attendanceRoutes);
 app.use('/exams', examRoutes);
 app.use('/courses', courseRoutes);
 app.use('/branchs', branchRoutes);
+app.use('/BatchTimes', BatchTime);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
