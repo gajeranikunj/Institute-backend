@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const attendanceSchema = new mongoose.Schema({
   date: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   faculty: {
     type: mongoose.Schema.Types.ObjectId,

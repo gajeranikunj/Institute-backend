@@ -12,6 +12,7 @@ const facultySchema = new mongoose.Schema({
   address: { type: String, required: true },
   expertise: [String],
   experienceYears: { type: Number, default: 0 },
+  branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
   joiningDate: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
 }, {

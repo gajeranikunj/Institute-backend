@@ -38,7 +38,8 @@ const studentSchema = new mongoose.Schema({
     slotTime: {
         type: String, // Example: "8:00AM to 10:00AM"
         required: true
-    }
+    },
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
 
 
 }, {

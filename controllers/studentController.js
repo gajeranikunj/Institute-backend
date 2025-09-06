@@ -7,7 +7,7 @@ const path = require('path');
 // Create Student manually (if needed outside inquiry)
 const createStudent = async (req, res) => {
   try {
-    const { name, email, phone, address, dob, course, faculty, inquiryId, feesPaid, status, slotTime } = req.body;
+    const { name, email, phone, address, dob, course, faculty, inquiryId, feesPaid, status, slotTime,branch } = req.body;
 
 
 
@@ -17,6 +17,7 @@ const createStudent = async (req, res) => {
     const newStudent = await Student.create({
       name, email, phone, address, dob, course,
       faculty, inquiryId, feesPaid, status, slotTime
+      ,branch
     });
 
 
@@ -84,7 +85,7 @@ const updateStudent = async (req, res) => {
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
-    const { name, email, phone, address, dob, course, feesPaid, status, slotTime } = req.body;
+    const { name, email, phone, address, dob, course, feesPaid, status, slotTime,branch } = req.body;
     console.log(req.body);
     
 
@@ -98,6 +99,7 @@ const updateStudent = async (req, res) => {
     if (feesPaid !== undefined) student.feesPaid = feesPaid;
     if (status) student.status = status;
     if (slotTime) student.slotTime = slotTime;
+    if (branch) student.branch = branch;
 
     const updated = await student.save();
     res.status(200).json(updated);

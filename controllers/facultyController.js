@@ -5,8 +5,8 @@ const generateToken = require('../utils/generateToken');
 // Register faculty (admin only)
 const registerFaculty = async (req, res) => {
   try {
-    const { name, email, password, phone, photo, salary, totalStudents, address, expertise, experienceYears } = req.body;
-    console.log(name, email, password, phone, photo, salary, totalStudents, address, expertise, experienceYears);
+    const { name, email, password, phone, photo, salary, totalStudents, address, expertise, experienceYears, branch } = req.body;
+    console.log(name, email, password, phone, photo, salary, totalStudents, address, expertise, experienceYears, branch);
 
     const exists = await Faculty.findOne({ email });
     if (exists) return res.status(400).json({ message: "Faculty already exists" });
@@ -21,7 +21,8 @@ const registerFaculty = async (req, res) => {
       totalStudents,
       address,
       expertise,
-      experienceYears
+      experienceYears,
+      branch
     });
 
     res.status(201).json({

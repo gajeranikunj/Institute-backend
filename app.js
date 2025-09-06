@@ -19,7 +19,8 @@ var inquiryRoutes = require('./routes/inquiryRoutes');
 var studentRoutes = require('./routes/studentRoutes');
 var attendanceRoutes = require('./routes/attendanceRoutes');
 var examRoutes = require('./routes/examRoutes');
-
+var courseRoutes = require('./routes/courseRoutes');
+var branchRoutes = require('./routes/branchRoutes');
 var app = express();
 
 /* 
@@ -65,6 +66,8 @@ app.use('/inquiry', inquiryRoutes);
 app.use('/student', studentRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/exams', examRoutes);
+app.use('/courses', courseRoutes);
+app.use('/branchs', branchRoutes);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

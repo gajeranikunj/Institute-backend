@@ -91,7 +91,9 @@ const updateInquiryStatus = async (req, res) => {
 // Confirm inquiry and create student
 const confirmInquiry = async (req, res) => {
   try {
-    const { facultyId, grNumber, photo, totalFees, paidFees, slotTime } = req.body;
+    const { facultyId, grNumber, photo, totalFees, paidFees, slotTime ,branch} = req.body;
+    console.log(req.body);
+    
 
     // ----- Fetch Inquiry -----
     const inquiry = await Inquiry.findById(req.params.id);
@@ -152,6 +154,7 @@ const confirmInquiry = async (req, res) => {
       pendingFees,
       feesHistory: [firstPayment],
       slotTime,
+      branch
     });
 
     // ----- Generate receipt PDF -----
