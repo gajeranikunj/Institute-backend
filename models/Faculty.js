@@ -15,6 +15,14 @@ const facultySchema = new mongoose.Schema({
   branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
   joiningDate: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
+
+  // 🏦 Banking Details
+  accountNumber: { type: String, required: false },
+  ifscCode: { type: String, required: false },
+
+  // 🪪 Identity Documents
+  aadhaarCard: { type: String, required: false }, // store number or file path
+  panCard: { type: String, required: false },     // store number or file path
 }, {
   timestamps: true
 });

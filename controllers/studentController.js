@@ -2,9 +2,11 @@ const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
 const Attendance = require('../models/Attendance');
 const generateReceipt = require('../utils/generateReceipt');
+const generateGRNumber = require('../utils/generateGRNumber');
 const path = require('path');
 
 // ✅ Create Student
+
 const createStudent = async (req, res) => {
   try {
     const {
@@ -19,7 +21,6 @@ const createStudent = async (req, res) => {
       aadharno,
       photo,
       Signature,
-      grNumber,
       course,
       faculty,
       inquiryId,
@@ -34,10 +35,13 @@ const createStudent = async (req, res) => {
       branch
     } = req.body;
 
-    // Check for duplicate inquiry
+    // Check duplicate inquiry
     const existing = await Student.findOne({ inquiryId });
     if (existing)
-      return res.status(400).json({ message: 'Student already exists for this inquiry' });
+      return res.status(400).json({ message: "Student already exists for this inquiry" });
+
+    // ✅ Generate GR number
+    const grNumber = await generateGRNumber();
 
     const newStudent = await Student.create({
       name,
@@ -51,7 +55,7 @@ const createStudent = async (req, res) => {
       aadharno,
       photo,
       Signature,
-      grNumber,
+      grNumber, // ✅ auto-generated
       course,
       faculty,
       inquiryId,
@@ -68,7 +72,7 @@ const createStudent = async (req, res) => {
 
     res.status(201).json(newStudent);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create student', error: error.message });
+    res.status(500).json({ message: "Failed to create student", error: error.message });
   }
 };
 
@@ -120,6 +124,10 @@ const updateStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ message: 'Student not found' });
+    if (req.body['faculty'] !== undefined) {
+      student['faculty'] = req.body['faculty'];
+    }
+
 
     const fields = [
       'name',

@@ -4,14 +4,17 @@ const Faculty = require('../models/Faculty');
 const fs = require('fs');
 const path = require('path');
 const generateReceipt = require('../utils/generateReceipt');
+const generateGRNumber = require('../utils/generateGRNumber');
+
 
 // Add new inquiry (defaults to Pending)
 const addInquiry = async (req, res) => {
   try {
-    const { name, email, phone, address, dob, courseInterested, note } = req.body;
+    const { name,surname, email, phone, address, dob, courseInterested, note } = req.body;
 
     const newInquiry = await Inquiry.create({
       name,
+      surname,
       email,
       phone,
       address,
@@ -50,11 +53,12 @@ const getInquiryById = async (req, res) => {
 // Update inquiry details
 const updateInquiryDetails = async (req, res) => {
   try {
-    const { name, email, phone, address, dob, courseInterested, note } = req.body;
+    const { name,surname, email, phone, address, dob, courseInterested, note } = req.body;
     const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
     if (name) inquiry.name = name;
+    if (surname) inquiry.surname = surname;
     if (email) inquiry.email = email;
     if (phone) inquiry.phone = phone;
     if (address) inquiry.address = address;
@@ -93,14 +97,14 @@ const confirmInquiry = async (req, res) => {
   try {
     const {
       facultyId,
-      grNumber,
+      // grNumber,
       photo,
       totalFees,
       paidFees,
       slotTime,
       branch,
       Signature,
-      surname,
+      // surname,
       fathername,
       fatherphone,
       aadharno,
@@ -141,10 +145,10 @@ const confirmInquiry = async (req, res) => {
     }
 
     // ----- Check for duplicate GR number -----
-    const grExists = await Student.findOne({ grNumber });
-    if (grExists) {
-      return res.status(400).json({ message: `GR Number "${grNumber}" already exists` });
-    }
+    // const grExists = await Student.findOne({ grNumber });
+    // if (grExists) {
+    //   return res.status(400).json({ message: `GR Number "${grNumber}" already exists` });
+    // }
 
     // ----- Create first payment entry -----
     const firstPayment = { amount: paid, date: new Date(), remark: 'Admission Installment' };
@@ -153,6 +157,7 @@ const confirmInquiry = async (req, res) => {
     const newStudent = await Student.create({
       // From Inquiry
       name: inquiry.name,
+      surname: inquiry.surname,
       email: inquiry.email,
       phone: inquiry.phone,
       address: inquiry.address,
@@ -160,7 +165,7 @@ const confirmInquiry = async (req, res) => {
       course: inquiry.courseInterested,
 
       // From request
-      surname,
+      // surname,
       fathername,
       fatherphone,
       aadharno,
@@ -169,7 +174,7 @@ const confirmInquiry = async (req, res) => {
       faculty: facultyId,
       inquiryId: inquiry._id,
       photo,
-      grNumber,
+      grNumber: await generateGRNumber(), // ✅ auto-generate
       totalFees: total,
       paidFees: paid,
       pendingFees,

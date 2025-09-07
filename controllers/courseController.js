@@ -3,13 +3,13 @@ const Course = require('../models/course');
 // Create a new course
 const createCourse = async (req, res) => {
   try {
-    const { nameifcourse } = req.body;
+    const { nameofcourse } = req.body;
 
-    if (!nameifcourse) {
+    if (!nameofcourse) {
       return res.status(400).json({ message: "Course name is required" });
     }
 
-    const newCourse = new Course({ nameifcourse });
+    const newCourse = new Course({ nameofcourse });
     await newCourse.save();
 
     res.status(201).json({ message: "Course created successfully", course: newCourse });
@@ -44,10 +44,10 @@ const getCourseById = async (req, res) => {
 // Update course
 const updateCourse = async (req, res) => {
   try {
-    const { nameifcourse } = req.body;
+    const { nameofcourse } = req.body;
     const course = await Course.findByIdAndUpdate(
       req.params.id,
-      { nameifcourse },
+      { nameofcourse },
       { new: true, runValidators: true }
     );
 
