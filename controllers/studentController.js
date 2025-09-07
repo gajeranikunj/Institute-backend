@@ -100,6 +100,17 @@ const getAllStudents = async (req, res) => {
   }
 };
 
+
+const getStudentBasicInfo = async (req, res) => {
+  try {
+    const students = await Student.find({}, "name surname fathername course _id");
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch student basic info", error: error.message });
+  }
+};
+
+
 // ✅ Get student by ID
 const getStudentById = async (req, res) => {
   try {
@@ -237,5 +248,6 @@ module.exports = {
   updateStudent,
   deleteStudent,
   getStudentsByFaculty,
-  addFeeInstallment
+  addFeeInstallment, 
+  getStudentBasicInfo
 };
