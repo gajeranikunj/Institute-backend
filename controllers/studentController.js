@@ -32,7 +32,9 @@ const createStudent = async (req, res) => {
       pendingFees,
       status,
       slotTime,
-      branch
+      branch,
+      Note,
+      Asianpc
     } = req.body;
 
     // Check duplicate inquiry
@@ -67,7 +69,9 @@ const createStudent = async (req, res) => {
       pendingFees,
       status,
       slotTime,
-      branch
+      branch,
+      Note,
+      Asianpc
     });
 
     res.status(201).json(newStudent);
@@ -164,7 +168,9 @@ const updateStudent = async (req, res) => {
       'pendingFees',
       'status',
       'slotTime',
-      'branch'
+      'branch',
+      "Note",
+      "Asianpc"
     ];
 
     fields.forEach(field => {

@@ -23,12 +23,16 @@ var courseRoutes = require('./routes/courseRoutes');
 var branchRoutes = require('./routes/branchRoutes');
 var BatchTime = require('./routes/BatchTimeRoutes');
 var WhatsApptext = require('./routes/WhatsApptextRoutes');
+var schedule = require('./routes/scheduleRoutes');
+const userCourseRoutes = require("./routes/userCourseRoutes");
+
+
 var app = express();
 
 /* 
 ✅ CORS configuration with multiple origins from .env
 In your .env file, set:
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+ALLOWED_ORIGINS=https://institute-backend-n2n3.onrender.com,http://localhost:5173
 */
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
@@ -70,8 +74,10 @@ app.use('/attendance', attendanceRoutes);
 app.use('/exams', examRoutes);
 app.use('/courses', courseRoutes);
 app.use('/branchs', branchRoutes);
-app.use('/BatchTimes', BatchTime);  
-app.use('/WhatsApptexts', WhatsApptext);  
+app.use('/BatchTimes', BatchTime);
+app.use('/WhatsApptexts', WhatsApptext);
+app.use('/schedule', schedule);
+app.use("/usercourses", userCourseRoutes); // Register user course routes
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

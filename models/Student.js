@@ -12,7 +12,7 @@ const studentSchema = new mongoose.Schema({
     aadharno: { type: String }, // ✅ Added Aadhar number
     photo: { type: String }, // ✅ Student photo (URL or filename)
     Signature: { type: String }, // ✅ Student signature (URL or filename)
-    
+
     grNumber: { type: String, unique: true }, // ✅ GR Number (must be unique)
 
     course: { type: String },
@@ -50,7 +50,14 @@ const studentSchema = new mongoose.Schema({
         type: String, // Example: "8:00AM to 10:00AM"
         required: true
     },
-
+    Note: {
+        type: String,
+        required: false
+    },
+    Asianpc: {
+        type: Number,
+        required: true
+    },
     branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }
 
 }, {

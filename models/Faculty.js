@@ -23,6 +23,7 @@ const facultySchema = new mongoose.Schema({
   // 🪪 Identity Documents
   aadhaarCard: { type: String, required: false }, // store number or file path
   panCard: { type: String, required: false },     // store number or file path
+  signature: { type: String, required: false },     // store number or file path
 }, {
   timestamps: true
 });

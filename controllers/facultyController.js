@@ -12,7 +12,6 @@ const registerFaculty = async (req, res) => {
       phone,
       photo,
       salary,
-      totalStudents,
       address,
       expertise,
       experienceYears,
@@ -20,8 +19,27 @@ const registerFaculty = async (req, res) => {
       accountNumber,
       ifscCode,
       aadhaarCard,
-      panCard
+      panCard,
+      signature
     } = req.body;
+
+      // Check for missing fields
+    const requiredFields = {
+      name, email, password, phone, photo, salary, address, expertise,
+      experienceYears, branch, accountNumber, ifscCode, aadhaarCard, panCard, signature
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([key, value]) => value === undefined || value === null || value === "")
+      .map(([key]) => key);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        missingFields
+      });
+    }
+
 
     const exists = await Faculty.findOne({ email });
     if (exists) return res.status(400).json({ message: "Faculty already exists" });
@@ -33,7 +51,6 @@ const registerFaculty = async (req, res) => {
       phone,
       photo,
       salary,
-      totalStudents,
       address,
       expertise,
       experienceYears,
@@ -41,7 +58,8 @@ const registerFaculty = async (req, res) => {
       accountNumber,
       ifscCode,
       aadhaarCard,
-      panCard
+      panCard,
+      signature
     });
 
     res.status(201).json({
@@ -162,6 +180,23 @@ const updateFaculty = async (req, res) => {
     }
 
     const updatedData = req.body;
+    
+    //   // Check for missing fields
+    // const requiredFields = {
+    //   name, email, phone, photo, salary, address, expertise,
+    //   experienceYears, branch, accountNumber, ifscCode, aadhaarCard, panCard, signature
+    // };
+
+    // const missingFields = Object.entries(requiredFields)
+    //   .filter(([key, value]) => value === undefined || value === null || value === "")
+    //   .map(([key]) => key);
+
+    // if (missingFields.length > 0) {
+    //   return res.status(400).json({
+    //     message: "Missing required fields",
+    //     missingFields
+    //   });
+    // }
 
     if (updatedData.password) {
       const bcrypt = require('bcrypt');

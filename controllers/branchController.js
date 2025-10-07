@@ -3,7 +3,7 @@ const branch = require('../models/branch');
 // Create a new branch
 const createbranch = async (req, res) => {
   try {
-    const { nameofbranch } = req.body;
+    const { nameofbranch ,TotalPc} = req.body;
     console.log("Request Body:", req.body);
     
 
@@ -11,7 +11,11 @@ const createbranch = async (req, res) => {
       return res.status(400).json({ message: "branch name is required" });
     }
 
-    const newbranch = new branch({ nameofbranch });
+    if (!TotalPc) {
+      return res.status(400).json({ message: "Total Pc is required" });
+    }
+
+    const newbranch = new branch({ nameofbranch,TotalPc });
     await newbranch.save();
 
     res.status(201).json({ message: "branch created successfully", branch: newbranch });
@@ -42,23 +46,25 @@ const getbranchById = async (req, res) => {
     res.status(500).json({ message: "Error fetching branch", error: error.message });
   }
 };
-
 // Update branch
 const updatebranch = async (req, res) => {
   try {
-    const { nameofbranch } = req.body;
-    const branch = await branch.findByIdAndUpdate(
+    const { nameofbranch, TotalPc } = req.body;
+    console.log("Updating branch ID:", req.params.id);
+
+    const updatedBranch = await branch.findByIdAndUpdate(
       req.params.id,
-      { nameofbranch },
+      { nameofbranch, TotalPc },
       { new: true, runValidators: true }
     );
 
-    if (!branch) {
-      return res.status(404).json({ message: "branch not found" });
+    if (!updatedBranch) {
+      return res.status(404).json({ message: "Branch not found" });
     }
 
-    res.status(200).json({ message: "branch updated successfully", branch });
+    res.status(200).json({ message: "Branch updated successfully", branch: updatedBranch });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error updating branch", error: error.message });
   }
 };

@@ -1,16 +1,21 @@
 const Inquiry = require('../models/Inquiry');
 const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
+
+const Course = require('../models/course'); // original course model
+const UserCourse = require('../models/usercourse'); // course assigned to student
+
 const fs = require('fs');
 const path = require('path');
 const generateReceipt = require('../utils/generateReceipt');
 const generateGRNumber = require('../utils/generateGRNumber');
 
 
+
 // Add new inquiry (defaults to Pending)
 const addInquiry = async (req, res) => {
   try {
-    const { name,surname, email, phone, address, dob, courseInterested, note } = req.body;
+    const { name, surname, email, phone, address, dob, courseInterested, note } = req.body;
 
     const newInquiry = await Inquiry.create({
       name,
@@ -53,7 +58,7 @@ const getInquiryById = async (req, res) => {
 // Update inquiry details
 const updateInquiryDetails = async (req, res) => {
   try {
-    const { name,surname, email, phone, address, dob, courseInterested, note } = req.body;
+    const { name, surname, email, phone, address, dob, courseInterested, note } = req.body;
     const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
@@ -109,7 +114,9 @@ const confirmInquiry = async (req, res) => {
       fatherphone,
       aadharno,
       joindate,
-      rafrence
+      rafrence,
+      Note,
+      pcNumber
     } = req.body;
 
     // ----- Fetch Inquiry -----
@@ -171,6 +178,8 @@ const confirmInquiry = async (req, res) => {
       aadharno,
       joindate,
       rafrence,
+      Note,
+      Asianpc: pcNumber,
       faculty: facultyId,
       inquiryId: inquiry._id,
       photo,
@@ -182,6 +191,24 @@ const confirmInquiry = async (req, res) => {
       slotTime,
       branch,
       Signature
+    });
+
+    const originalCourse = await Course.findOne({
+      nameofcourse: { $regex: `^${newStudent.course}$`, $options: "i" }
+    });
+
+    if (!originalCourse)
+      return res.status(404).json({ message: `Course "${newStudent.course}" not found` });
+
+
+    // 2️⃣ Create UserCourse for this student using original course steps
+    const userCourse = await UserCourse.create({
+      nameofcourse: originalCourse.nameofcourse,
+      user: newStudent._id,
+      steps: originalCourse.steps.map(step => ({
+        title: step.title,
+        status: false, // all steps start as not done
+      })),
     });
 
     // ----- Generate receipt PDF -----
